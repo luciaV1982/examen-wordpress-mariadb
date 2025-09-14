@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  namespace: examen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      # El contenedor de MariaDB correrá con grupo 1001 (bitnami),
+      # para que tenga permisos sobre el volumen.
+      securityContext:
+        fsGroup: 1001
+
+      # ✅ Init container como root para arreglar permisos en el volumen
+      initContainers:
+        - name: fix-perms
+          image: alpine:3.19
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0            # <— root
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              set -eux
+              mkdir -p /bitnami/mariadb
+              chown -R 1001:1001 /bitnami/mariadb
+              chmod -R 0775 /bitnami/mariadb
+          volumeMounts:
+            - name: mariadb-storage
+              mountPath: /bitnami/mariadb
+
+      containers:
+        - name: mariadb
+          image: bitnami/mariadb:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              value: "rootpass123"
+            - name: MARIADB_DATABASE
+              value: "wordpress"
+            - name: MARIADB_USER
+              value: "wpuser"
+            - name: MARIADB_PASSWORD
+              value: "wppass123"
+          volumeMounts:
+            - name: mariadb-storage
+              mountPath: /bitnami/mariadb
+
+      volumes:
+        - name: mariadb-storage
+          persistentVolumeClaim:
+            claimName: mariadb-pvc
+
+
+
+
+

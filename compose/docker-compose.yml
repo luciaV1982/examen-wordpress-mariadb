@@ -1,0 +1,65 @@
+services:
+  mariadb:
+    image: bitnami/mariadb:latest
+    container_name: wp-mariadb-1
+    environment:
+      - MARIADB_ROOT_PASSWORD=wppass123
+      - MARIADB_DATABASE=wordpress
+      - MARIADB_USER=wpuser
+      - MARIADB_PASSWORD=wppass123
+    healthcheck:
+      # Comprueba que MariaDB responda usando la misma clave configurada arriba
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pwppass123"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [wpnet]
+    # ─── Persistencia (opcional: descomenta si quieres guardar datos en disco) ───
+    # volumes:
+    #   - db_data:/bitnami/mariadb
+
+  wordpress:
+    image: bitnami/wordpress:latest
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      - WORDPRESS_DATABASE_HOST=mariadb
+      - WORDPRESS_DATABASE_NAME=wordpress
+      - WORDPRESS_DATABASE_USER=wpuser
+      - WORDPRESS_DATABASE_PASSWORD=wppass123
+    ports:
+      - "8080:8080"   # Abre WordPress en http://localhost:8080
+    networks: [wpnet]
+    # (Opcional) healthcheck simple a la web de WP
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET / HTTP/1.1\r\nHost: localhost\r\n\r\n' >&3 && grep -q '200 OK' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    # Persistencia (opcional)
+    # volumes:
+    #   - wp_data:/bitnami/wordpress
+
+  phpmyadmin:
+    image: bitnami/phpmyadmin:latest
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      - PHPMYADMIN_ALLOW_ARBITRARY_SERVER=yes
+      - DATABASE_HOST=mariadb
+      - DATABASE_PORT_NUMBER=3306
+      - DATABASE_ROOT_PASSWORD=wppass123
+    ports:
+      - "8081:8080"   # Abre phpMyAdmin en http://localhost:8081
+    networks: [wpnet]
+
+networks:
+  wpnet:
+
+# Persistencia (si la quieres, descomenta arriba los volumes de cada servicio)
+# volumes:
+#   db_data:
+#   wp_data:
+

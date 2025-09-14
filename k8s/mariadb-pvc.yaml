@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-pvc
+  namespace: examen
+spec:
+  storageClassName: ""        # <— desactiva el aprovisionamiento dinámico
+  volumeName: mariadb-pv      # <— pídele específicamente ese PV
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
