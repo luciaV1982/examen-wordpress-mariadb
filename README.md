@@ -11,6 +11,7 @@ Este repositorio contiene los manifiestos de **Kubernetes** y el archivo de **Do
 ## 🚀 Opción 1 – Desplegar en Kubernetes (Minikube)
 
 1. Clonar este repositorio:
-   ```bash
-   git clone https://github.com/luciaV1982/examen-wordpress-mariadb.git
-   cd examen-wordpress-mariadb/k8s
+
+```bash
+git clone https://github.com/luciaV1982/examen-wordpress-mariadb.git
+cd examen-wordpress-mariadb/k8s
